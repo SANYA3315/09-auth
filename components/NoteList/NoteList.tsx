@@ -5,7 +5,7 @@ import { deleteNote } from "@/lib/api";
 import { useState } from "react";
 import type { Note } from "../../types/note";
 import { useRouter } from "next/navigation";
-import EmptyState from "@/components/EmptyState/EmptyState";
+import EmptyState from "../EmptyState/EmptyState";
 
 
 interface NoteListProps {

@@ -1,5 +1,8 @@
 import Link from 'next/link';
+
 import css from '@/components/Header/Header.module.css';
+import { AuthNavigation } from '../AuthNavigation/AuthNavigation';
+
 
 interface HeaderProps {
     menuItems?: { title: string; href: string }[];
@@ -20,10 +23,14 @@ const Header = ({
             <nav>
                 <ul className={css.navigation}>
                     {menuItems.map((item) => (
-                        <li key={item.href}>
-                            <Link href={item.href}>{item.title}</Link>
+                        <li key={item.href} className={css.navigationItem}>
+                            <Link href={item.href} className={css.navigationLink}>
+                                {item.title}
+                            </Link>
                         </li>
                     ))}
+                    
+                    <AuthNavigation />
                 </ul>
             </nav>
         </header>

@@ -12,6 +12,7 @@ interface SearchBoxProps {
 export default function SearchBox({ onSearch, initialValue = "" }: SearchBoxProps) {
     const [value, setValue] = useState(initialValue);
 
+ 
     useEffect(() => {
         setValue(initialValue);
     }, [initialValue]);
@@ -23,14 +24,14 @@ export default function SearchBox({ onSearch, initialValue = "" }: SearchBoxProp
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value;
         setValue(newValue); 
-        debouncedSearch(newValue);
+        debouncedSearch(newValue); 
     };
 
     return (
         <input
             className={css.input}
             type="text"
-            value={value}
+            value={value} 
             onChange={handleChange}
             placeholder="Search notes..."
         />

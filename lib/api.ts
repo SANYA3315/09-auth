@@ -25,6 +25,7 @@ export const fetchNoteById = async (id: string): Promise<Note> => {
   return res.data;
 };
 
+
 export const createNote = async (
   noteData: Omit<Note, "id" | "createdAt" | "updatedAt">,
 ): Promise<Note> => {
@@ -44,7 +45,6 @@ export const fetchNotes = async ({
   tag,
 }: FetchNotesParams): Promise<FetchNotesResponse> => {
   
-
   const queryParams: any = {
     search,
     page,

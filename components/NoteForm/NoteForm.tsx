@@ -10,6 +10,7 @@ import css from './NoteForm.module.css';
 export default function NoteForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  
   const { draft, setDraft, clearDraft } = useNoteStore();
 
   const { mutate, isPending } = useMutation({
@@ -25,7 +26,6 @@ export default function NoteForm() {
     }
   });
 
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -39,8 +39,7 @@ export default function NoteForm() {
     if (!draft.title || draft.title.length < 3) {
       return alert('Title too short');
     }
-
-    
+t
     mutate(draft);
   };
 
