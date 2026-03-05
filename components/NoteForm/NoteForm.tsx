@@ -39,7 +39,6 @@ export default function NoteForm() {
     if (!draft.title || draft.title.length < 3) {
       return alert('Title too short');
     }
-t
     mutate(draft);
   };
 
