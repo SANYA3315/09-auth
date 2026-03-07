@@ -1,3 +1,9 @@
+import css from './page.module.css';
+
 export default function Loading() {
-    return <p>Loading, please wait...</p>;
+  return (
+    <main className={css.main}>
+      <p>Loading, please wait...</p>
+    </main>
+  );
 }

@@ -1,62 +1,44 @@
-'use client';
-import css from "./NoteList.module.css";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteNote } from "@/lib/api";
-import { useState } from "react";
-import type { Note } from "../../types/note";
-import { useRouter } from "next/navigation";
-import EmptyState from "../EmptyState/EmptyState";
+import css from './NoteList.module.css';
 
+import { deleteNote } from '@/lib/api/clientApi';
+import { type Note } from '@/types/note';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
 
 interface NoteListProps {
-  notes: Note[];
+  noteList: Note[];
 }
 
-export default function NoteList({ notes }: NoteListProps) {
+export default function NoteList({ noteList }: NoteListProps) {
   const queryClient = useQueryClient();
-  const router = useRouter();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const { mutate } = useMutation({
-    mutationFn: deleteNote,
-    onMutate: (id: string) => setDeletingId(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["notes"],
-      });
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await deleteNote(id);
+      return res;
     },
-    onSettled: () => setDeletingId(null),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+    },
   });
-
-  if (!notes || notes.length === 0) return <EmptyState />;
 
   return (
     <ul className={css.list}>
-      {notes.map((note) => (
+      {noteList.map(note => (
         <li key={note.id} className={css.listItem}>
-          <h3 className={css.title}>{note.title}</h3>
+          <h2 className={css.title}>{note.title}</h2>
           <p className={css.content}>{note.content}</p>
-
           <div className={css.footer}>
             <span className={css.tag}>{note.tag}</span>
-            <div className={css.actions}>
-              <button
-                className={css.detailsLink}
-                onClick={() => router.push(`/notes/${note.id}`)}
-              >
-                View Details
-              </button>
-
-              <button
-                className={css.button}
-                onClick={() => {
-                  if (confirm("Ви впевнені?")) mutate(note.id);
-                }}
-                disabled={deletingId === note.id}
-              >
-                {deletingId === note.id ? "Deleting..." : "Delete"}
-              </button>
-            </div>
+            <Link className={css.link} href={`/notes/${note.id}`}>
+              View details
+            </Link>
+            <button
+              onClick={() => deleteMutation.mutate(note.id)}
+              className={css.button}
+            >
+              Delete
+            </button>
           </div>
         </li>
       ))}

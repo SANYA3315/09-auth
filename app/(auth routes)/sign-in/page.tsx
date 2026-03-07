@@ -1,40 +1,55 @@
 'use client';
 
-import { useState } from 'react';
+import css from './page.module.css';
+
 import { useRouter } from 'next/navigation';
-import { login } from '@/lib/api/clientApi';
-import { useAuthStore } from '@/lib/store/authStore';
-import css from './SignInPage.module.css';
+import { useState } from 'react';
+import { AxiosError } from 'axios';
 
-export default function SignInPage() {
+import { UserReg } from '@/types/user';
+import { login, getMe } from '@/lib/api/clientApi';
+import { useLogin } from '@/lib/store/authStore';
+
+import Modal from '@/components/Modal/Modal';
+
+export default function Login() {
+  const setUser = useLogin(state => state.setUser);
   const router = useRouter();
-  const setUser = useAuthStore((state) => state.setUser);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isModal, setIsModal] = useState(false);
+  const [mess, setMess] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-    setIsLoading(true);
+  function closeModal() {
+    router.push('/sign-up');
+  }
 
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
+  async function handleSubmit(formData: FormData) {
+    const data: UserReg = {
+      email: formData.get('email') as string,
+      password: formData.get('password') as string,
+    };
 
     try {
-      const user = await login({ email, password });
-      setUser(user);
-      router.push('/profile');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Invalid email or password');
-    } finally {
-      setIsLoading(false);
+      const res = await login(data);
+      if (res) {
+        setMess('');
+        const user = await getMe();
+        setUser(user);
+        router.push('/profile');
+      }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        if (error.response?.data?.response?.message === 'Invalid credentials') {
+          setIsModal(true);
+        }
+        setMess(error.response?.data?.response?.message);
+      }
+      setMess('An error has occurred. We apologize...');
     }
-  };
+  }
 
   return (
     <main className={css.mainContent}>
-      <form className={css.form} onSubmit={handleSubmit}>
+      <form className={css.form} action={handleSubmit}>
         <h1 className={css.formTitle}>Sign in</h1>
 
         <div className={css.formGroup}>
@@ -56,20 +71,22 @@ export default function SignInPage() {
             name="password"
             className={css.input}
             required
+            minLength={6}
           />
         </div>
 
         <div className={css.actions}>
-          <button 
-            type="submit" 
-            className={css.submitButton}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Loading...' : 'Log in'}
+          <button type="submit" className={css.submitButton}>
+            Log in
           </button>
         </div>
 
-        {error && <p className={css.error}>{error}</p>}
+        {mess !== '' && <p className={css.error}>{mess}</p>}
+        {isModal && (
+          <Modal onClose={closeModal}>
+            <p>Invalid credentials or user not found.</p>
+          </Modal>
+        )}
       </form>
     </main>
   );

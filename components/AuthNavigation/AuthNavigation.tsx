@@ -1,54 +1,67 @@
 'use client';
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/lib/store/authStore';
-import { logout } from '@/lib/api/clientApi';
 import css from './AuthNavigation.module.css';
 
-export const AuthNavigation = () => {
-  const router = useRouter();
-  const { user, isAuthenticated, clearIsAuthenticated } = useAuthStore();
+import { useRouter } from 'next/navigation';
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      clearIsAuthenticated();
+import { useLogin } from '@/lib/store/authStore';
+import { logout } from '@/lib/api/clientApi';
+import Link from 'next/link';
+
+export default function AuthNavigation() {
+  const router = useRouter();
+  const isLogin = useLogin(state => state.isAuthenticated);
+  const clearUser = useLogin(state => state.clearIsAuthenticated);
+  const user = useLogin(state => state.user);
+
+  async function out() {
+    const res = await logout();
+    if (res) {
+      clearUser();
       router.push('/sign-in');
-    } catch (error) {
-      console.error('Logout failed:', error);
     }
-  };
+  }
 
   return (
     <>
-      {isAuthenticated ? (
+      {isLogin && (
         <>
           <li className={css.navigationItem}>
-            <Link href="/profile" prefetch={false} className={css.navigationLink}>
+            <Link
+              href="/profile"
+              prefetch={false}
+              className={css.navigationLink}
+            >
               Profile
             </Link>
           </li>
           <li className={css.navigationItem}>
-            <p className={css.userEmail}>{user?.email || 'User email'}</p>
-            <button 
-              type="button" 
-              className={css.logoutButton} 
-              onClick={handleLogout}
-            >
+            <p className={css.userEmail}>
+              {user.email ? user.email : 'User email'}
+            </p>
+            <button onClick={out} className={css.logoutButton}>
               Logout
             </button>
           </li>
         </>
-      ) : (
+      )}
+      {!isLogin && (
         <>
           <li className={css.navigationItem}>
-            <Link href="/sign-in" prefetch={false} className={css.navigationLink}>
+            <Link
+              href="/sign-in"
+              prefetch={false}
+              className={css.navigationLink}
+            >
               Login
             </Link>
           </li>
           <li className={css.navigationItem}>
-            <Link href="/sign-up" prefetch={false} className={css.navigationLink}>
+            <Link
+              href="/sign-up"
+              prefetch={false}
+              className={css.navigationLink}
+            >
               Sign up
             </Link>
           </li>
@@ -56,4 +69,4 @@ export const AuthNavigation = () => {
       )}
     </>
   );
-};
+}

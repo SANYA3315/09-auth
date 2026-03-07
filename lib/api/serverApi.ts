@@ -1,41 +1,96 @@
-import axios from 'axios';
 import { cookies } from 'next/headers';
-import { User } from '@/types/user';
+import { nextServer } from './api';
 
-const SERVER_URL = 'https://notehub-public.goit.study/api';
+import type { User } from '@/types/user';
+import { type Note, type FetchTagNote } from '@/types/note';
 
-export const axiosInstance = axios.create({
-  baseURL: SERVER_URL,
-  withCredentials: true,
-});
+interface Answer {
+  notes: Note[];
+  totalPages: number;
+}
 
-const getServerApi = async () => {
+export async function fetchNotes(
+  tag: FetchTagNote,
+  page: number,
+  search: string
+): Promise<Answer> {
   const cookieStore = await cookies();
-  const token = cookieStore.get('accessToken')?.value;
+  if (tag === 'all' && !search) {
+    const res = await nextServer.get<Answer>(
+      `/notes?&page=${page}&perPage=12`,
+      {
+        headers: {
+          Cookie: cookieStore.toString(),
+        },
+      }
+    );
+    return res.data;
+  }
 
-  return axios.create({
-    baseURL: SERVER_URL,
+  if (tag !== 'all' && !search) {
+    const res = await nextServer.get<Answer>(
+      `/notes?tag=${tag}&page=${page}&perPage=12`,
+      {
+        headers: {
+          Cookie: cookieStore.toString(),
+        },
+      }
+    );
+    return res.data;
+  }
+
+  if (tag === 'all' && search) {
+    const res = await nextServer.get<Answer>(
+      `/notes?search=${search}&page=${page}&perPage=12`,
+      {
+        headers: {
+          Cookie: cookieStore.toString(),
+        },
+      }
+    );
+    return res.data;
+  }
+
+  const res = await nextServer.get<Answer>(
+    `/notes?search=${search}&tag=${tag}&page=${page}&perPage=12`,
+    {
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    }
+  );
+  return res.data;
+}
+
+export async function fetchNoteById(id: string): Promise<Note> {
+  const cookieStore = await cookies();
+
+  const res = await nextServer.get<Note>(`/notes/${id}`, {
     headers: {
-      Authorization: token ? `Bearer ${token}` : '',
+      Cookie: cookieStore.toString(),
     },
   });
-};
+  return res.data;
+}
 
-export const fetchNotes = async (params: any) => {
-  try {
-    const api = await getServerApi();
-    const { data } = await api.get('/notes', { params });
-    return data;
-  } catch (error) {
-    return { notes: [], totalPages: 0 };
-  }
-};
+export async function getMe(): Promise<User> {
+  const cookieStore = await cookies();
 
-export const checkSession = async () => {
-  try {
-    const api = await getServerApi();
-    return await api.get('/auth/session');
-  } catch {
-    return null;
-  }
-};
+  const res = await nextServer.get('/users/me', {
+    headers: {
+      Cookie: cookieStore.toString(),
+    },
+  });
+  return res.data;
+}
+
+export async function checkSession() {
+  const cookieStore = await cookies();
+
+  const res = await nextServer.get('/auth/session', {
+    headers: {
+      Cookie: cookieStore.toString(),
+    },
+  });
+  return res;
+}

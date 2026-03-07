@@ -7,6 +7,11 @@
   color: white;
 }
 
+.navigationItem {
+  display: flex;
+  align-items: center;
+}
+
 .header a {
   text-decoration: none;
   color: white;
@@ -15,7 +20,7 @@
 }
 
 .header a:hover {
-  color: #dcdbe2;
+  color: #ddd;
 }
 
 .navigation {
@@ -33,5 +38,5 @@
 }
 
 .navigation li a:hover {
-  color: #817e7e;
+  color: #ddd;
 }

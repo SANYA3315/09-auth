@@ -1,99 +1,57 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
+'use client';
 
-import { fetchNotes, FetchNotesResponse } from "@/lib/api";
-import NoteList from "@/components/NoteList/NoteList";
-import Pagination from "@/components/Pagination/Pagination";
-import EmptyState from "@/components/EmptyState/EmptyState";
-import SearchBox from "@/components/SearchBox/SearchBox"; 
-import css from "./Notes.client.module.css";
+import css from './page.module.css';
 
-const perPage = 12;
-const VALID_TAGS = ["Todo", "Work", "Personal", "Meeting", "Shopping"];
+import { type FetchTagNote } from '@/types/note';
+
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { fetchNotes } from '@/lib/api/clientApi';
+import { useDebouncedCallback } from 'use-debounce';
+import Link from 'next/link';
+
+import NoteList from '@/components/NoteList/NoteList';
+import Pagination from '@/components/Pagination/Pagination';
+import SearchBox from '@/components/SearchBox/SearchBox';
 
 interface NotesClientProps {
-  initialTag: string;
+  tag: FetchTagNote;
 }
 
-export default function NotesClient({ initialTag }: NotesClientProps) {
+export default function NotesClient({ tag }: NotesClientProps) {
   const [page, setPage] = useState(1);
-  const [searchInput, setSearchInput] = useState(""); 
-  const [search, setSearch] = useState(""); 
+  const [word, setWord] = useState('');
 
-  useEffect(() => {
-    const timer = setTimeout(() => setSearch(searchInput), 500);
-    return () => clearTimeout(timer);
-  }, [searchInput]);
-
-  useEffect(() => {
-    setPage(1);
-    setSearchInput(""); 
-  }, [initialTag]);
-
-  const activeTag = VALID_TAGS.includes(initialTag) ? initialTag : "";
-
-  const { data, isLoading, isError, isFetching } = useQuery<FetchNotesResponse>({
-    queryKey: ["notes", initialTag, page, search],
-    queryFn: () =>
-      fetchNotes({
-        tag: activeTag,
-        page,
-        perPage,
-        search,
-      }),
-    placeholderData: (previousData) => previousData,
-    staleTime: 1000 * 60,
+  const { data } = useQuery({
+    queryKey: ['notes', tag, page, word],
+    queryFn: () => fetchNotes(tag, page, word),
+    placeholderData: keepPreviousData,
+    refetchOnMount: false,
+    throwOnError: true,
   });
 
-  const handlePageChange = (newPage: number) => {
-    if (!data) return;
-    if (newPage >= 1 && newPage <= data.totalPages) {
-      setPage(newPage);
-    }
-  };
-
-  const handleSearch = (value: string) => {
-    setSearchInput(value); 
-    setPage(1);
-  };
+  const changeWord = useDebouncedCallback((newWord: string) => {
+    const page = 1;
+    setPage(page);
+    setWord(newWord);
+  }, 500);
 
   return (
-    <div className={css.app}>
-      <header className={css.toolbar}>
-        <SearchBox onSearch={handleSearch} initialValue={searchInput} />
-
+    <div className={css.notes}>
+      <div className={css.toolbar}>
+        <SearchBox changeWord={changeWord} />
         {data && data.totalPages > 1 && (
           <Pagination
             page={page}
             totalPages={data.totalPages}
-            onPageChange={handlePageChange}
+            setPage={setPage}
           />
         )}
-
-        <Link href="/notes/action/create" className={css.button}>
+        <Link className={css.toolBtn} href={'/notes/action/create'}>
           Create note +
         </Link>
-      </header>
-
-      {isLoading && <p>Loading...</p>}
-
-      {!isLoading && !isError && data && data.notes.length > 0 && (
-        <>
-          <NoteList notes={data.notes} />
-          {isFetching && <div className={css.fetchingLoader}>Updating...</div>}
-        </>
-      )}
-
-      {!isLoading && !isError && data && data.notes.length === 0 && (
-        <EmptyState
-          message={
-            search
-              ? "No notes match your search"
-              : "No notes in this category"
-          }
-        />
-      )}
+      </div>
+      {data && data.notes.length > 0 && <NoteList noteList={data.notes} />}
     </div>
   );
 }

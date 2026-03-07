@@ -1,21 +1,15 @@
-import { ReactNode } from "react";
-import css from './LayoutNotes.module.css';
+import css from './layout-notes.module.css';
 
-export default function NotesLayout({ 
-  children, 
-  sidebar
-}: { 
-  children: ReactNode; 
-  sidebar: ReactNode;
-}) {
+interface LayoutNotesProps {
+  children: React.ReactNode;
+  sidebar: React.ReactNode;
+}
+
+export default function LayoutNotes({ children, sidebar }: LayoutNotesProps) {
   return (
     <div className={css.container}>
-      <aside className={css.sidebar}>
-        {sidebar}
-      </aside>
-      <main className={css.notesWrapper}>
-        {children}
-      </main>
+      <div className={css.sidebar}>{sidebar}</div>
+      <div className={css.notesWrapper}>{children}</div>
     </div>
   );
 }
